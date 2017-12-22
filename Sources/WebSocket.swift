@@ -218,6 +218,18 @@ open class FoundationStream : NSObject, WSStream, StreamDelegate  {
                     return // disconnectStream will be called.
                 }
             }
+		
+		#if os(Linux)
+    		#else			
+		// Disable naggle algorithm (useful to lower lag for games)
+            	let socketData = CFWriteStreamCopyProperty(outStream, CFStreamPropertyKey.socketNativeHandle) as! CFData;
+            	let handle = CFSocketNativeHandle(CFDataGetBytePtr(socketData).pointee);
+            	var one: Int = 1
+            	let size = UInt32(MemoryLayout.size(ofValue: one))
+            	setsockopt(handle, IPPROTO_TCP, TCP_NODELAY, &one, size)
+            	// END
+		#endif				
+						
             completion(nil) //success!
         }
     }
